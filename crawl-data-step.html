@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crawl Data Twitter — Tutorial</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:        #09090f;
+      --surface:   #12121e;
+      --card:      #181828;
+      --border:    rgba(139,92,246,0.25);
+      --cyan:      #00f5d4;
+      --violet:    #8b5cf6;
+      --pink:      #f472b6;
+      --amber:     #fbbf24;
+      --green:     #34d399;
+      --text:      #e8e8f0;
+      --muted:     #6b6b8a;
+      --code-bg:   #0d0d1a;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Space Grotesk', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── NOISE OVERLAY ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 0; opacity: 0.6;
+    }
+
+    /* ── BACKGROUND BLOBS ── */
+    .blob {
+      position: fixed; border-radius: 50%;
+      filter: blur(100px); pointer-events: none; z-index: 0;
+    }
+    .blob-1 { width: 600px; height: 600px; background: rgba(139,92,246,0.12); top: -200px; left: -200px; }
+    .blob-2 { width: 500px; height: 500px; background: rgba(0,245,212,0.08); bottom: -150px; right: -150px; }
+    .blob-3 { width: 400px; height: 400px; background: rgba(244,114,182,0.07); top: 50%; left: 50%; transform: translate(-50%,-50%); }
+
+    /* ── LAYOUT ── */
+    .container {
+      position: relative; z-index: 1;
+      max-width: 860px; margin: 0 auto;
+      padding: 0 24px 80px;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      text-align: center;
+      padding: 80px 0 60px;
+    }
+
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(139,92,246,0.15);
+      border: 1px solid rgba(139,92,246,0.4);
+      border-radius: 100px;
+      padding: 6px 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px; color: var(--violet);
+      margin-bottom: 28px;
+      letter-spacing: 0.04em;
+    }
+    .hero-badge span { width: 7px; height: 7px; background: var(--violet); border-radius: 50%; animation: pulse 1.8s ease-in-out infinite; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.4; transform: scale(0.8); }
+    }
+
+    .hero h1 {
+      font-size: clamp(2.2rem, 5vw, 3.6rem);
+      font-weight: 700; line-height: 1.1;
+      letter-spacing: -0.03em;
+    }
+
+    .hero h1 .gradient {
+      background: linear-gradient(135deg, var(--cyan) 0%, var(--violet) 50%, var(--pink) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      margin-top: 18px;
+      color: var(--muted); font-size: 1.05rem; line-height: 1.7;
+      max-width: 540px; margin-inline: auto;
+    }
+
+    .hero-meta {
+      display: flex; align-items: center; justify-content: center; gap: 24px;
+      margin-top: 32px; flex-wrap: wrap;
+    }
+    .hero-meta span {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 13px; color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .hero-meta .dot { width: 6px; height: 6px; border-radius: 50%; }
+    .dot-cyan  { background: var(--cyan); }
+    .dot-violet{ background: var(--violet); }
+    .dot-pink  { background: var(--pink); }
+
+    /* ── SECTION DIVIDER ── */
+    .section-label {
+      display: flex; align-items: center; gap: 12px;
+      margin: 48px 0 28px;
+    }
+    .section-label span {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; font-weight: 700;
+      color: var(--muted); letter-spacing: 0.14em;
+      text-transform: uppercase; white-space: nowrap;
+    }
+    .section-label::after {
+      content: ''; flex: 1; height: 1px;
+      background: linear-gradient(90deg, var(--border), transparent);
+    }
+
+    /* ── STEP CARD ── */
+    .step-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      margin-bottom: 16px;
+      overflow: hidden;
+      transition: border-color 0.25s, transform 0.2s;
+      cursor: default;
+    }
+    .step-card:hover {
+      border-color: rgba(139,92,246,0.55);
+      transform: translateY(-2px);
+    }
+
+    .step-header {
+      display: flex; align-items: center; gap: 14px;
+      padding: 20px 24px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .step-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; font-weight: 700;
+      min-width: 28px; height: 28px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; letter-spacing: 0.04em;
+    }
+
+    .step-info { flex: 1; }
+    .step-title {
+      font-size: 15px; font-weight: 600; line-height: 1.3;
+    }
+    .step-subtitle {
+      font-size: 12px; color: var(--muted); margin-top: 2px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .step-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px; font-weight: 700;
+      padding: 4px 10px; border-radius: 6px;
+      letter-spacing: 0.06em; flex-shrink: 0;
+    }
+
+    .chevron {
+      width: 20px; height: 20px; color: var(--muted);
+      transition: transform 0.3s; flex-shrink: 0;
+    }
+    .step-card.open .chevron { transform: rotate(180deg); }
+
+    /* color themes per step */
+    .t-bash   .step-num { background: rgba(0,245,212,0.12); color: var(--cyan); }
+    .t-bash   .step-tag { background: rgba(0,245,212,0.1);  color: var(--cyan); border: 1px solid rgba(0,245,212,0.3); }
+    .t-bash   .step-title { color: var(--cyan); }
+
+    .t-python .step-num { background: rgba(139,92,246,0.15); color: var(--violet); }
+    .t-python .step-tag { background: rgba(139,92,246,0.1);  color: var(--violet); border: 1px solid rgba(139,92,246,0.3); }
+    .t-python .step-title { color: var(--violet); }
+
+    .t-mixed  .step-num { background: rgba(244,114,182,0.12); color: var(--pink); }
+    .t-mixed  .step-tag { background: rgba(244,114,182,0.1);  color: var(--pink); border: 1px solid rgba(244,114,182,0.3); }
+    .t-mixed  .step-title { color: var(--pink); }
+
+    /* ── STEP BODY ── */
+    .step-body {
+      display: none; padding: 0 24px 24px;
+    }
+    .step-card.open .step-body { display: block; }
+
+    .step-desc {
+      font-size: 13.5px; line-height: 1.75; color: #a0a0c0;
+      margin-bottom: 16px;
+    }
+
+    /* ── CODE BLOCK ── */
+    .code-wrap {
+      background: var(--code-bg);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .code-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.025);
+    }
+
+    .code-bar-left { display: flex; align-items: center; gap: 10px; }
+    .code-dots { display: flex; gap: 6px; }
+    .code-dots span { width: 11px; height: 11px; border-radius: 50%; }
+    .d1 { background: #ff5f57; }
+    .d2 { background: #ffbd2e; }
+    .d3 { background: #28ca41; }
+
+    .code-lang {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; color: var(--muted); letter-spacing: 0.05em;
+    }
+
+    .copy-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; padding: 4px 12px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 6px; color: var(--muted);
+      cursor: pointer; transition: all 0.2s;
+    }
+    .copy-btn:hover { background: rgba(139,92,246,0.2); color: var(--violet); border-color: rgba(139,92,246,0.4); }
+    .copy-btn.copied { color: var(--green); border-color: rgba(52,211,153,0.4); }
+
+    pre {
+      padding: 18px 20px;
+      overflow-x: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      line-height: 1.75;
+      color: #c8c8e8;
+    }
+
+    /* syntax */
+    .kw  { color: #c792ea; font-weight: 600; }  /* keyword */
+    .fn  { color: #82aaff; }                     /* function */
+    .st  { color: #c3e88d; }                     /* string */
+    .cm  { color: #546e7a; font-style: italic; } /* comment */
+    .nm  { color: var(--cyan); }                 /* number/name */
+    .op  { color: #89ddff; }                     /* operator / flag */
+    .pu  { color: #f78c6c; }                     /* punctuation */
+
+    /* ── PART LABEL ── */
+    .part-banner {
+      display: flex; align-items: center; gap: 16px;
+      padding: 14px 20px;
+      border-radius: 12px;
+      margin-bottom: 24px;
+    }
+    .part-banner .icon { font-size: 20px; }
+    .part-banner-info { line-height: 1.3; }
+    .part-banner-title { font-size: 14px; font-weight: 600; }
+    .part-banner-sub   { font-size: 12px; color: var(--muted); margin-top: 2px; font-family: 'JetBrains Mono', monospace; }
+
+    .pb-setup   { background: rgba(0,245,212,0.06); border: 1px solid rgba(0,245,212,0.2); }
+    .pb-scrape  { background: rgba(251,191,36,0.06); border: 1px solid rgba(251,191,36,0.2); }
+    .pb-scrape  .part-banner-title { color: var(--amber); }
+    .pb-scrape  .part-banner-sub   { color: rgba(251,191,36,0.5); }
+    .pb-setup   .part-banner-title { color: var(--cyan); }
+    .pb-analyze { background: rgba(139,92,246,0.06); border: 1px solid rgba(139,92,246,0.2); }
+    .pb-analyze .part-banner-title { color: var(--violet); }
+    .pb-analyze .part-banner-sub   { color: rgba(139,92,246,0.5); }
+
+    /* ── PROGRESS ── */
+    .progress-bar {
+      position: fixed; top: 0; left: 0; height: 3px;
+      background: linear-gradient(90deg, var(--cyan), var(--violet), var(--pink));
+      z-index: 999; transition: width 0.15s;
+    }
+
+    /* ── FOOTER ── */
+    .footer {
+      text-align: center; margin-top: 60px;
+      padding-top: 32px;
+      border-top: 1px solid var(--border);
+      color: var(--muted); font-size: 13px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .footer a { color: var(--violet); text-decoration: none; }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.4); border-radius: 3px; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 600px) {
+      .step-header { padding: 16px 18px; }
+      .step-body   { padding: 0 18px 20px; }
+      pre          { font-size: 11.5px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="progress-bar" id="pbar"></div>
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+
+  <div class="container">
+
+    <!-- HERO -->
+    <div class="hero">
+      <div class="hero-badge"><span></span> Google Colab Tutorial</div>
+      <h1><span class="gradient">Crawl Data Twitter</span><br/>Step by Step</h1>
+      <p>Panduan lengkap scraping tweet pakai tweet-harvest di Google Colab — dari setup sampai ekspor data ke JSON.</p>
+      <div class="hero-meta">
+        <span><span class="dot dot-cyan"></span>10 Langkah</span>
+        <span><span class="dot dot-violet"></span>Python &amp; Node.js</span>
+        <span><span class="dot dot-pink"></span>tweet-harvest v2.6.1</span>
+      </div>
+    </div>
+
+    <!-- PART 1: SETUP -->
+    <div class="section-label"><span>Bagian 1 — Setup Lingkungan</span></div>
+    <div class="part-banner pb-setup">
+      <div class="icon">⚙️</div>
+      <div class="part-banner-info">
+        <div class="part-banner-title">Persiapan &amp; Instalasi</div>
+        <div class="part-banner-sub">install deps · konfigurasi auth · setup browser engine</div>
+      </div>
+    </div>
+
+    <!-- Step 1 -->
+    <div class="step-card t-python" id="card-1">
+      <div class="step-header" onclick="toggle(1)">
+        <div class="step-num">01</div>
+        <div class="step-info">
+          <div class="step-title">Install Library Pandas</div>
+          <div class="step-subtitle">pip install · data manipulation</div>
+        </div>
+        <div class="step-tag">Python</div>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="step-body">
+        <div class="step-desc">Install library Pandas yang dibutuhkan untuk membaca, memanipulasi, dan mengekspor data CSV / JSON hasil scraping.</div>
+        <div class="code-wrap">
+          <div class="code-bar">
+            <div class="code-bar-left">
+              <div class="code-dots"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div>
+              <span class="code-lang">python</span>
+            </div>
+            <button class="copy-btn" onclick="copyCode(this)">copy</button>
+          </div>
+          <pre><span class="op">!</span><span class="fn">pip</span> install pandas</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-card t-python" id="card-2">
+      <div class="step-header" onclick="toggle(2)">
+        <div class="step-num">02</div>
+        <div class="step-info">
+          <div class="step-title">Konfigurasi Twitter Auth Token</div>
+          <div class="step-subtitle">auth · credentials · token setup</div>
+        </div>
+        <div class="step-tag">Python</div>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="step-body">
+        <div class="step-desc">Simpan auth token Twitter kamu sebagai variabel. Token ini digunakan untuk autentikasi saat melakukan scraping. Ganti nilainya jika sudah kedaluwarsa.</div>
+        <div class="code-wrap">
+          <div class="code-bar">
+            <div class="code-bar-left">
+              <div class="code-dots"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div>
+              <span class="code-lang">python</span>
+            </div>
+            <button class="copy-btn" onclick="copyCode(this)">copy</button>
+          </div>
+          <pre><span class="cm">#@title Twitter Auth Token</span>
+twitter_auth_token <span class="op">=</span> <span class="st">'92a01d3f012ea56fae1f1eb0f3061e46bf5002bc'</span>
+<span class="cm"># Ganti dengan auth token Anda jika kedaluwarsa</span></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step-card t-bash" id="card-3">
+      <div class="step-header" onclick="toggle(3)">
+        <div class="step-num">03</div>
+        <div class="step-info">
+          <div class="step-title">Install Node.js v20 &amp; Dependensi Sistem</div>
+          <div class="step-subtitle">nodejs · apt-get · runtime setup</div>
+        </div>
+        <div class="step-tag">Bash</div>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="step-body">
+        <div class="step-desc">Install Node.js versi 20 menggunakan NodeSource. Diperlukan untuk menjalankan tweet-harvest yang berbasis Node.js.</div>
+        <div class="code-wrap">
+          <div class="code-bar">
+            <div class="code-bar-left">
+              <div class="code-dots"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div>
+              <span class="code-lang">bash</span>
+            </div>
+            <button class="copy-btn" onclick="copyCode(this)">copy</button>
+          </div>
+          <pre><span class="op">!</span>sudo apt-get update
+<span class="op">!</span>sudo apt-get install <span class="op">-y</span> ca-certificates curl gnupg
+
+<span class="op">!</span>sudo mkdir <span class="op">-p</span> /etc/apt/keyrings
+
+<span class="op">!</span>curl <span class="op">-fsSL</span> https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key \
+  <span class="op">|</span> sudo gpg <span class="op">--dearmor -o</span> /etc/apt/keyrings/nodesource.gpg
+
+<span class="op">!</span>NODE_MAJOR=<span class="nm">20</span> <span class="op">&&</span> echo <span class="st">"deb [signed-by=/etc/apt/keyrings/nodesource.gpg] \
+  https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main"</span> \
+  <span class="op">|</span> sudo tee /etc/apt/sources.list.d/nodesource.list
+
+<span class="op">!</span>sudo apt-get update
+<span class="op">!</span>sudo apt-get install nodejs <span class="op">-y</span>
+
+<span class="cm"># Memeriksa versi node yang terinstall</span>
+<span class="op">!</span>node <span class="op">-v</span></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step-card t-bash" id="card-4">
+      <div class="step-header" onclick="toggle(4)">
+        <div class="step-num">04</div>
+        <div class="step-info">
+          <div class="step-title">Install Dependensi Library Browser</div>
+          <div class="step-subtitle">GUI · Linux · libatk · libgtk</div>
+        </div>
+        <div class="step-tag">Bash</div>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="step-body">
+        <div class="step-desc">Install library sistem yang dibutuhkan Playwright untuk menjalankan Chromium secara headless di lingkungan Linux Colab.</div>
+        <div class="code-wrap">
+          <div class="code-bar">
+            <div class="code-bar-left">
+              <div class="code-dots"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div>
+              <span class="code-lang">bash</span>
+            </div>
+            <button class="copy-btn" onclick="copyCode(this)">copy</button>
+          </div>
+          <pre><span class="op">!</span>apt-get update
+
+<span class="op">!</span>apt-get install <span class="op">-y</span> \
+  libatk1.0-0 libatk-bridge2.0-0 libgtk-3-0 \
+  libgbm1 libasound2 libnss3 libxss1 libxtst6 \
+  libxrandr2 libxcomposite1 libxdamage1 libxfixes3 \
+  libdrm2 libxkbcommon0 libpango-1.0-0 \
+  libpangocairo-1.0-0 libcairo2 libatspi2.0-0</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step-card t-bash" id="card-5">
+      <div class="step-header" onclick="toggle(5)">
+        <div class="step-num">05</div>
+        <div class="step-info">
+          <div class="step-title">Install Playwright Chromium</div>
+          <div class="step-subtitle">playwright · browser engine · chromium</div>
+        </div>
+        <div class="step-tag">Bash</div>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="step-body">
+        <div class="step-desc">Download dan install Chromium melalui Playwright. Browser ini digunakan tweet-harvest untuk membuka Twitter dan mengambil data tweet secara otomatis.</div>
+        <div class="code-wrap">
+          <div class="code-bar">
+            <div class="code-bar-left">
+              <div class="code-dots"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div>
+              <span class="code-lang">bash</span>
+            </div>
+            <button class="copy-btn" onclick="copyCode(this)">copy</button>
+          </div>
+          <pre><span class="op">!</span>npx playwright install chromium</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- PART 2: SCRAPING -->
+    <div class="section-label"><span>Bagian 2 — Proses Scraping</span></div>
+    <div class="part-banner pb-scrape">
+      <div class="icon">🌾</div>
+      <div class="part-banner-info">
+        <div class="part-banner-title">Eksekusi Tweet Harvest</div>
+        <div class="part-banner-sub">tweet-harvest@2.6.1 · search · latest tab · csv output</div>
+      </div>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step-card t-mixed" id="card-6">
+      <div class="step-header" onclick="toggle(6)">
+        <div class="step-num">06</div>
+        <div class="step-info">
+          <div class="step-title">Eksekusi Scraping Twitter</div>
+          <div class="step-subtitle">tweet-harvest · keyword · limit · csv</div>
+        </div>
+        <div class="step-tag">Python</div>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="step-body">
+        <div class="step-desc">Jalankan proses scraping dengan keyword <code style="background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:12px">"Piala Dunia" lang:id</code> dan ambil 1000 tweet terbaru. Hasilnya disimpan ke file CSV.</div>
+        <div class="code-wrap">
+          <div class="code-bar">
+            <div class="code-bar-left">
+              <div class="code-dots"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div>
+              <span class="code-lang">python</span>
+            </div>
+            <button class="copy-btn" onclick="copyCode(this)">copy</button>
+          </div>
+          <pre><span class="cm"># Pengaturan parameter pencarian</span>
+filename       <span class="op">=</span> <span class="st">"piala_dunia_2026.csv"</span>
+search_keyword <span class="op">=</span> <span class="st">'"Piala Dunia" lang:id'</span>
+limit          <span class="op">=</span> <span class="nm">1000</span>
+
+<span class="cm"># Menjalankan tweet-harvest</span>
+<span class="op">!</span>npx <span class="op">-y</span> tweet-harvest<span class="op">@</span><span class="nm">2.6.1</span> \
+  <span class="op">-o</span> <span class="st">"{filename}"</span> \
+  <span class="op">-s</span> <span class="st">"{search_keyword}"</span> \
+  <span class="op">--tab</span> <span class="st">"LATEST"</span> \
+  <span class="op">-l</span> {limit} \
+  <span class="op">--token</span> {twitter_auth_token}</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- PART 3: ANALISIS -->
+    <div class="section-label"><span>Bagian 3 — Analisis Data &amp; Ekspor</span></div>
+    <div class="part-banner pb-analyze">
+      <div class="icon">📊</div>
+      <div class="part-banner-info">
+        <div class="part-banner-title">Pandas — Baca, Filter, Ekspor</div>
+        <div class="part-banner-sub">read_csv · DataFrame · to_json · full_text</div>
+      </div>
+    </div>
+
+    <!-- Step 7 -->
+    <div class="step-card t-python" id="card-7">
+      <div class="step-header" onclick="toggle(7)">
+        <div class="step-num">07</div>
+        <div class="step-info">
+          <div class="step-title">Membaca dan Menampilkan Dataset CSV</div>
+          <div class="step-subtitle">pandas · read_csv · df.head()</div>
+        </div>
+        <div class="step-tag">Python</div>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="step-body">
+        <div class="step-desc">Load hasil scraping ke dalam Pandas DataFrame. Tampilkan dimensi data (baris × kolom) dan 5 baris pertama untuk memastikan data berhasil terbaca.</div>
+        <div class="code-wrap">
+          <div class="code-bar">
+            <div class="code-bar-left">
+              <div class="code-dots"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div>
+              <span class="code-lang">python</span>
+            </div>
+            <button class="copy-btn" onclick="copyCode(this)">copy</button>
+          </div>
+          <pre><span class="kw">import</span> pandas <span class="kw">as</span> pd
+
+<span class="cm"># Membaca data hasil scrape</span>
+df <span class="op">=</span> pd<span class="pu">.</span><span class="fn">read_csv</span>(<span class="st">'/content/tweets-data/piala_dunia_2026.csv'</span>)
+
+<span class="cm"># Menampilkan dimensi dataframe dan 5 data teratas</span>
+<span class="fn">print</span>(<span class="st">"Ukuran Data:"</span>, df<span class="pu">.</span>shape)
+df<span class="pu">.</span><span class="fn">head</span>()</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 8 -->
+    <div class="step-card t-python" id="card-8">
+      <div class="step-header" onclick="toggle(8)">
+        <div class="step-num">08</div>
+        <div class="step-info">
+          <div class="step-title">Memeriksa Nama-Nama Kolom</div>
+          <div class="step-subtitle">df.columns · struktur data</div>
+        </div>
+        <div class="step-tag">Python</div>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="step-body">
+        <div class="step-desc">Lihat semua nama kolom yang tersedia dalam DataFrame untuk mengetahui struktur data sebelum melakukan filtering lebih lanjut.</div>
+        <div class="code-wrap">
+          <div class="code-bar">
+            <div class="code-bar-left">
+              <div class="code-dots"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div>
+              <span class="code-lang">python</span>
+            </div>
+            <button class="copy-btn" onclick="copyCode(this)">copy</button>
+          </div>
+          <pre><span class="fn">print</span>(df<span class="pu">.</span>columns)</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 9 -->
+    <div class="step-card t-python" id="card-9">
+      <div class="step-header" onclick="toggle(9)">
+        <div class="step-num">09</div>
+        <div class="step-info">
+          <div class="step-title">Memfilter Kolom Teks Utama</div>
+          <div class="step-subtitle">full_text · kolom seleksi · tweet_df</div>
+        </div>
+        <div class="step-tag">Python</div>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="step-body">
+        <div class="step-desc">Buat DataFrame baru yang hanya berisi kolom <code style="background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:12px">full_text</code> — isi teks tweet saja, berguna untuk analisis sentimen atau NLP.</div>
+        <div class="code-wrap">
+          <div class="code-bar">
+            <div class="code-bar-left">
+              <div class="code-dots"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div>
+              <span class="code-lang">python</span>
+            </div>
+            <button class="copy-btn" onclick="copyCode(this)">copy</button>
+          </div>
+          <pre><span class="cm"># Mengambil hanya kolom teks tweet saja</span>
+tweet_df <span class="op">=</span> df<span class="pu">[[</span><span class="st">'full_text'</span><span class="pu">]]</span>
+tweet_df<span class="pu">.</span><span class="fn">head</span>()</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 10 -->
+    <div class="step-card t-python" id="card-10">
+      <div class="step-header" onclick="toggle(10)">
+        <div class="step-num">10</div>
+        <div class="step-info">
+          <div class="step-title">Ekspor Hasil Akhir ke Format JSON</div>
+          <div class="step-subtitle">to_json · orient records · indent</div>
+        </div>
+        <div class="step-tag">Python</div>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="step-body">
+        <div class="step-desc">Ekspor data ke file JSON. Pilih Opsi 1 untuk ekspor semua kolom, atau Opsi 2 (aktifkan dengan menghapus <code style="background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:12px">#</code>) untuk ekspor teks tweet saja.</div>
+        <div class="code-wrap">
+          <div class="code-bar">
+            <div class="code-bar-left">
+              <div class="code-dots"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div>
+              <span class="code-lang">python</span>
+            </div>
+            <button class="copy-btn" onclick="copyCode(this)">copy</button>
+          </div>
+          <pre><span class="cm"># Opsi 1: Seluruh kolom → JSON</span>
+df<span class="pu">.</span><span class="fn">to_json</span>(
+  <span class="st">'/content/tweets-data/piala_dunia_2026.json'</span>,
+  orient<span class="op">=</span><span class="st">'records'</span>,
+  indent<span class="op">=</span><span class="nm">4</span>
+)
+
+<span class="cm"># Opsi 2: Hanya full_text → JSON (hapus '#' untuk aktifkan)</span>
+<span class="cm"># tweet_df.to_json(</span>
+<span class="cm">#   '/content/tweets-data/just_text_piala_dunia.json',</span>
+<span class="cm">#   orient='records', indent=4</span>
+<span class="cm"># )</span>
+
+<span class="fn">print</span>(<span class="st">"File JSON berhasil disimpan!"</span>)</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+      <p>made with ♥ · tweet-harvest@2.6.1 · Google Colab</p>
+    </div>
+
+  </div><!-- /container -->
+
+  <script>
+    // Toggle step cards
+    function toggle(n) {
+      const card = document.getElementById('card-' + n);
+      card.classList.toggle('open');
+      updateProgress();
+    }
+
+    // Copy code
+    function copyCode(btn) {
+      const pre = btn.closest('.code-wrap').querySelector('pre');
+      const text = pre.innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = 'copied ✓';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('copied'); }, 2000);
+      });
+    }
+
+    // Progress bar on scroll
+    window.addEventListener('scroll', () => {
+      const total = document.body.scrollHeight - window.innerHeight;
+      const pct   = total > 0 ? (window.scrollY / total) * 100 : 0;
+      document.getElementById('pbar').style.width = pct + '%';
+    });
+
+    // Auto-open first card
+    document.getElementById('card-1').classList.add('open');
+
+    function updateProgress() {}
+  </script>
+</body>
+</html>
