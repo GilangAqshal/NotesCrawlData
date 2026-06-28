@@ -4,7 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Crawl Data Twitter & Data Ingestion ke Hadoop & MongoDB</title>
-    <link rel="icon" type="image/x-icon" href="assets/note.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
       href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
@@ -666,7 +665,7 @@
     <div class="container">
       <!-- HERO -->
       <div class="hero">
-        <!-- <div class="hero-badge"><span></span> Google Colab Tutorial</div> -->
+        <div class="hero-badge"><span></span> Google Colab Tutorial</div>
         <h1>
           <span class="gradient">Crawl Data Twitter</span><br />dan Data
           Ingestion ke<br /><span class="gradient">Hadoop &amp; MongoDB</span>
@@ -697,7 +696,7 @@
       </div>
 
       <!-- Step 1 -->
-      <div class="step-card t-python" id="card-1">
+      <div class="step-card open t-python" id="card-1">
         <div class="step-header" onclick="toggle(1)">
           <div class="step-num">01</div>
           <div class="step-info">
@@ -737,7 +736,7 @@
       </div>
 
       <!-- Step 2 -->
-      <div class="step-card t-python" id="card-2">
+      <div class="step-card open t-python" id="card-2">
         <div class="step-header" onclick="toggle(2)">
           <div class="step-num">02</div>
           <div class="step-info">
@@ -780,7 +779,7 @@ twitter_auth_token <span class="op">=</span> <span class="st">'92a01d3f012ea56fa
       </div>
 
       <!-- Step 3 -->
-      <div class="step-card t-bash" id="card-3">
+      <div class="step-card open t-bash" id="card-3">
         <div class="step-header" onclick="toggle(3)">
           <div class="step-num">03</div>
           <div class="step-info">
@@ -838,7 +837,7 @@ twitter_auth_token <span class="op">=</span> <span class="st">'92a01d3f012ea56fa
       </div>
 
       <!-- Step 4 -->
-      <div class="step-card t-bash" id="card-4">
+      <div class="step-card open t-bash" id="card-4">
         <div class="step-header" onclick="toggle(4)">
           <div class="step-num">04</div>
           <div class="step-info">
@@ -885,7 +884,7 @@ twitter_auth_token <span class="op">=</span> <span class="st">'92a01d3f012ea56fa
       </div>
 
       <!-- Step 5 -->
-      <div class="step-card t-bash" id="card-5">
+      <div class="step-card open t-bash" id="card-5">
         <div class="step-header" onclick="toggle(5)">
           <div class="step-num">05</div>
           <div class="step-info">
@@ -940,7 +939,7 @@ twitter_auth_token <span class="op">=</span> <span class="st">'92a01d3f012ea56fa
       </div>
 
       <!-- Step 6 -->
-      <div class="step-card t-mixed" id="card-6">
+      <div class="step-card open t-mixed" id="card-6">
         <div class="step-header" onclick="toggle(6)">
           <div class="step-num">06</div>
           <div class="step-info">
@@ -1017,7 +1016,7 @@ limit          <span class="op">=</span> <span class="nm">1000</span>
       </div>
 
       <!-- Step 7 -->
-      <div class="step-card t-python" id="card-7">
+      <div class="step-card open t-python" id="card-7">
         <div class="step-header" onclick="toggle(7)">
           <div class="step-num">07</div>
           <div class="step-info">
@@ -1065,7 +1064,7 @@ df<span class="pu">.</span><span class="fn">head</span>()</pre>
       </div>
 
       <!-- Step 8 -->
-      <div class="step-card t-python" id="card-8">
+      <div class="step-card open t-python" id="card-8">
         <div class="step-header" onclick="toggle(8)">
           <div class="step-num">08</div>
           <div class="step-info">
@@ -1105,7 +1104,7 @@ df<span class="pu">.</span><span class="fn">head</span>()</pre>
       </div>
 
       <!-- Step 9 -->
-      <div class="step-card t-python" id="card-9">
+      <div class="step-card open t-python" id="card-9">
         <div class="step-header" onclick="toggle(9)">
           <div class="step-num">09</div>
           <div class="step-info">
@@ -1159,7 +1158,7 @@ tweet_df<span class="pu">.</span><span class="fn">head</span>()</pre>
       </div>
 
       <!-- Step 10 -->
-      <div class="step-card t-python" id="card-10">
+      <div class="step-card open t-python" id="card-10">
         <div class="step-header" onclick="toggle(10)">
           <div class="step-num">10</div>
           <div class="step-info">
@@ -1236,7 +1235,7 @@ df<span class="pu">.</span><span class="fn">to_json</span>(
       </div>
 
       <!-- Step 11 -->
-      <div class="step-card t-cmd" id="card-11">
+      <div class="step-card open t-cmd" id="card-11">
         <div class="step-header" onclick="toggle(11)">
           <div class="step-num">11</div>
           <div class="step-info">
@@ -1302,7 +1301,7 @@ jps</pre
       </div>
 
       <!-- Step 12 -->
-      <div class="step-card t-cmd" id="card-12">
+      <div class="step-card open t-cmd" id="card-12">
         <div class="step-header" onclick="toggle(12)">
           <div class="step-num">12</div>
           <div class="step-info">
@@ -1358,7 +1357,7 @@ hdfs dfs -cat /cuy/piala_dunia_2026.json | more</pre
       </div>
 
       <!-- Step 13 -->
-      <div class="step-card t-mongo" id="card-13">
+      <div class="step-card open t-mongo" id="card-13">
         <div class="step-header" onclick="toggle(13)">
           <div class="step-num">13</div>
           <div class="step-info">
@@ -1407,7 +1406,7 @@ hdfs dfs -cat /cuy/piala_dunia_2026.json | more</pre
       </div>
 
       <!-- Step 14 -->
-      <div class="step-card t-scala" id="card-14">
+      <div class="step-card open t-scala" id="card-14">
         <div class="step-header" onclick="toggle(14)">
           <div class="step-num">14</div>
           <div class="step-info">
@@ -1461,7 +1460,7 @@ hdfs dfs -cat /cuy/piala_dunia_2026.json | more</pre
       </div>
 
       <!-- Step 15 -->
-      <div class="step-card t-scala" id="card-15">
+      <div class="step-card open t-scala" id="card-15">
         <div class="step-header" onclick="toggle(15)">
           <div class="step-num">15</div>
           <div class="step-info">
@@ -1527,7 +1526,7 @@ Spark session available as <span class="out-key">'spark'</span></pre>
       </div>
 
       <!-- Step 16 -->
-      <div class="step-card t-scala" id="card-16">
+      <div class="step-card open t-scala" id="card-16">
         <div class="step-header" onclick="toggle(16)">
           <div class="step-num">16</div>
           <div class="step-info">
@@ -1589,7 +1588,7 @@ df<span class="pu">.</span><span class="fn">printSchema</span>()</pre>
       </div>
 
       <!-- Step 17 -->
-      <div class="step-card t-scala" id="card-17">
+      <div class="step-card open t-scala" id="card-17">
         <div class="step-header" onclick="toggle(17)">
           <div class="step-num">17</div>
           <div class="step-info">
@@ -1661,7 +1660,7 @@ df<span class="pu">.</span><span class="fn">printSchema</span>()</pre>
       </div>
 
       <!-- Step 18 -->
-      <div class="step-card t-mongo" id="card-18">
+      <div class="step-card open t-mongo" id="card-18">
         <div class="step-header" onclick="toggle(18)">
           <div class="step-num">18</div>
           <div class="step-info">
@@ -1728,7 +1727,7 @@ df<span class="pu">.</span><span class="fn">printSchema</span>()</pre>
       </div>
 
       <!-- Step 19 -->
-      <div class="step-card t-scala" id="card-19">
+      <div class="step-card open t-scala" id="card-19">
         <div class="step-header" onclick="toggle(19)">
           <div class="step-num">19</div>
           <div class="step-info">
@@ -1770,7 +1769,7 @@ df<span class="pu">.</span><span class="fn">printSchema</span>()</pre>
       </div>
 
       <!-- Step 20 -->
-      <div class="step-card t-mongo" id="card-20">
+      <div class="step-card open t-mongo" id="card-20">
         <div class="step-header" onclick="toggle(20)">
           <div class="step-num">20</div>
           <div class="step-info">
@@ -1868,9 +1867,6 @@ db<span class="pu">.</span>komentar<span class="pu">.</span><span class="fn">cou
         const pct = total > 0 ? (window.scrollY / total) * 100 : 0;
         document.getElementById("pbar").style.width = pct + "%";
       });
-
-      // Auto-open first card
-      document.getElementById("card-1").classList.add("open");
 
       function updateProgress() {}
     </script>
